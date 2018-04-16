@@ -1,0 +1,5 @@
+default kickstart
+label kickstart
+  menu label ^Auto Install CenOS Server
+  kernel vmlinuz
+  append initrd=initrd.img ks={{ ks_url }}

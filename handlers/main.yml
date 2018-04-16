@@ -1,0 +1,7 @@
+---
+# - name: restart centos-installer
+#   become: yes
+#   service:
+#     name: "{{ item }}"
+#     state: restarted
+#   with_items: "{{ centos_installer_service_names }}"

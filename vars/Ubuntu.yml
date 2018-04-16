@@ -1,0 +1,7 @@
+---
+centos_installer_packages_default:
+  - syslinux
+  - syslinux-utils
+  - openssh-client
+  - p7zip-full
+  - genisoimage

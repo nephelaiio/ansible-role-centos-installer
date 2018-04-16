@@ -1,0 +1,137 @@
+---
+- name: include variable overrides
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+        - "vars/{{ ansible_distribution }}.yml"
+        - "vars/{{ ansible_os_family }}.yml"
+      skip: true
+
+- name: install packages
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: "{{ centos_installer_package_state }}"
+  with_items: "{{ centos_installer_packages | default(ubuntu_installer_packages_default) }}"
+
+- name: create temporary target directory
+  tempfile:
+    state: directory
+    prefix: iso
+  register: tmpdir_dest
+  changed_when: false
+
+- name: create centos image target directory
+  file:
+    state: directory
+    path: "{{ centos_installer_target_dir }}"
+
+- name: register default centos iso url
+  set_fact:
+    src_url: "http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso"
+
+- name: register source centos iso file
+  set_fact:
+    src_iso: "{{ ubuntu_installer_target_dir }}/centos.iso"
+
+- name: fetch centos source iso
+  get_url:
+    url: "{{ ubuntu_centos_image_url | default(src_url) }}"
+    dest: "{{ src_iso }}"
+
+- name: extract centos source iso
+  command: "7z x {{ src_iso }}"
+  args:
+    chdir: "{{ tmpdir_dest.path }}"
+  changed_when: false
+  become: yes
+
+- name: check isolinux configuration file location
+  command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.cfg"
+  register: isolinux_cfgdest
+  become: yes
+  changed_when: false
+
+- name: configure isolinux
+  lineinfile:
+    path: "{{ isolinux_cfgdest.stdout }}"
+    regexp: 'timeout\s+[0-9]+'
+    line: 'timeout 1'
+  become: yes
+  changed_when: false
+
+- name: register kickstart file location
+  set_fact:
+    ks_file: "ks.cfg"
+
+- name: create kickstart file
+  template:
+    src: "{{ centos_ks_template }}"
+    dest: "{{ tmpdir_dest.path }}/{{ ks_file }}"
+  vars:
+    hostname: "{{ ubuntu_installer_hostname | split_with('.') | head }}"
+    domain: "{{ ubuntu_installer_hostname | split_with('.') | tail | join('.') }}"
+    timezone: "{{ ubuntu_installer_timezone }}"
+    username: "{{ ubuntu_installer_username }}"
+    password: "{{ ubuntu_installer_password }}"
+    sshkey: "{{ ubuntu_installer_sshkey }}"
+    late_command: "{{ ubuntu_installer_late_command | default('') }}"
+    interface: "{{ ubuntu_installer_interface }}"
+    disk: "{{ ubuntu_installer_disk | default('') }}"
+    halt: "{{ ubuntu_installer_halt | default('false') }}"
+    mirror: "{{ ubuntu_mirror }}"
+    security_mirror: "{{ ubuntu_security_mirror }}"
+  become: yes
+  changed_when: false
+
+- name: check isolinux boot file location
+  command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.cfg"
+  register: isolinux_bootdest
+  become: yes
+  changed_when: false
+
+- name: set bootloader kickstart configuration
+  template:
+    src: isolinux.cfg.j2
+    dest: "{{ isolinux_bootdest.stdout }}"
+  vars:
+    ks_url: "cdrom:/{{ ks_file }}"
+  become: yes
+  changed_when: false
+
+- name: check isolinux bin file location
+  command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.bin"
+  register: isolinux_bindest
+  become: yes
+  changed_when: false
+
+- name: check isolinux boot cat file location
+  command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name boot.cat"
+  register: isolinux_bootcatdest
+  become: yes
+  changed_when: false
+
+- name: compute isolinux bin
+  set_fact:
+    isolinux_bin: "{{ isolinux_bindest.stdout | regex_replace(tmpdir_dest.path + '/', '') }}"
+    isolinux_cat: "{{ isolinux_bootcatdest.stdout | regex_replace(tmpdir_dest.path + '/', '') }}"
+
+- name: create centos autoinstall iso
+  command: "mkisofs -D -r -V 'ubuntu' -cache-inodes -J -cache-inodes -J -l -b {{ isolinux_bin }} -c {{ isolinux_cat }} -no-emul-boot -boot-load-size 4 -boot-info-table -o {{ ubuntu_installer_target_dir }}/{{ ubuntu_installer_hostname }}.iso ."
+  args:
+    chdir: "{{ tmpdir_dest.path }}"
+  become: yes
+  changed_when: false
+
+- name: make iso bootable
+  command: "isohybrid {{ ubuntu_installer_target_dir }}/{{ ubuntu_installer_hostname }}.iso"
+  become: yes
+  changed_when: false
+
+- name: remove temporary directories
+  file:
+    path: "{{ tmpdir_dest.path }}"
+    state: absent
+  become: yes
+  changed_when: false
