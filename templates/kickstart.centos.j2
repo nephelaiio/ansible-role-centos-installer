@@ -1,0 +1,41 @@
+# configure authentication options
+auth --enableshadow --passalgo=sha512
+
+# install from cdrom
+install
+cdrom
+text
+firstboot --enable
+ignoredisk --only-use=sda
+keyboard --vckeymap=us --xlayouts='us'
+lang en_US.UTF-8
+bootloader --location=mbr --boot-drive=sda
+
+# automatic partitioning
+clearpart --all --initlabel
+autopart --type=lvm
+
+# network configuration
+network  --bootproto=static --ip={{ interface.ipaddress }} --netmask={{ interface.netmask }} --gateway={{ interface.gateway }} --nameserver={{ interface.nameservers | join(',')}} --noipv6 --activate
+network --hostname={{ hostname }}
+firewall --disabled
+selinux --disabled
+
+# user configuration
+user --name={{ username }} --password={{ password }} --iscrypted
+
+# accept eula
+eula --agreed
+
+# eject installation dvd before rebooting
+reboot --eject
+
+%packages
+@^minimal
+@core
+curl
+openssh-server
+%end
+
+%post
+%end
