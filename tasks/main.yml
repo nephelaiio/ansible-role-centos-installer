@@ -81,7 +81,6 @@
     disk: "{{ centos_installer_disk | default('') }}"
     halt: "{{ centos_installer_halt | default('false') }}"
     mirror: "{{ centos_mirror }}"
-    security_mirror: "{{ centos_security_mirror }}"
   become: yes
   changed_when: false
 
