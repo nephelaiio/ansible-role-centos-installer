@@ -16,7 +16,11 @@ clearpart --all --initlabel
 autopart --type=lvm
 
 # network configuration
-network  --bootproto=static --ip={{ interface.ipaddress }} --netmask={{ interface.netmask }} --gateway={{ interface.gateway }} --nameserver={{ interface.nameservers | join(',')}} --noipv6 --activate
+{% if interface.static %}
+network  --bootproto=static --ip={{ interface.ipaddress }} --netmask={{ interface.netmask }} --gateway={{ interface.gateway }} --nameserver={{ interface.nameservers | join(',')}} --noipv6
+{% else %}
+network  --bootproto=dhcp
+{% endif %}
 network --hostname={{ hostname }}
 firewall --disabled
 selinux --disabled
