@@ -29,7 +29,7 @@
 
 - name: register default centos iso url
   set_fact:
-    src_url: "http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso"
+    src_url: "{{ default_centos_iso_url }}"
 
 - name: register source centos iso file
   set_fact:
