@@ -20,4 +20,6 @@ galaxy_info:
   galaxy_tags:
     - centos-installer
 
-dependencies: []
+dependencies:
+  - role: nephelaiio.plugins
+    version: 1.0.5
