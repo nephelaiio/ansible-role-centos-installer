@@ -1,5 +1,8 @@
 ---
 - name: Converge
   hosts: all
+  vars:
+    username: test
+    password: "{{ 'test' | password_hash('sha512') }}"
   roles:
     - role: centos-installer
