@@ -30,6 +30,4 @@ centos_installer_halt: false  # true | false
 
 centos_ks_template: kickstart.centos.j2
 
-centos_mirror: archive.ubuntu.com
-
 default_centos_iso_url: http://mirrors.liquidweb.com/CentOS/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso
