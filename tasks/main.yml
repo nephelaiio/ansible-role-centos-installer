@@ -80,7 +80,6 @@
     interface: "{{ centos_installer_interface }}"
     disk: "{{ centos_installer_disk | default('') }}"
     halt: "{{ centos_installer_halt | default('false') }}"
-    timezone: "{{ centos_installer_timezone }}"
   become: yes
   changed_when: false
 
