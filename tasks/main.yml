@@ -70,17 +70,15 @@
     src: "{{ centos_ks_template }}"
     dest: "{{ tmpdir_dest.path }}/{{ ks_file }}"
   vars:
-    hostname: "{{ centos_installer_hostname | split_with('.') | head }}"
-    domain: "{{ centos_installer_hostname | split_with('.') | tail | join('.') }}"
+    hostname: "{{ centos_installer_hostname }}"
     timezone: "{{ centos_installer_timezone }}"
     username: "{{ centos_installer_username }}"
     password: "{{ centos_installer_password }}"
+    homedir: "{{ centos_installer_userhome | default('/home/' + centos_installer_username) }}"
     sshkey: "{{ centos_installer_sshkey }}"
-    late_command: "{{ centos_installer_late_command | default('') }}"
     interface: "{{ centos_installer_interface }}"
     disk: "{{ centos_installer_disk | default('') }}"
     halt: "{{ centos_installer_halt | default('false') }}"
-    mirror: "{{ centos_mirror }}"
   become: yes
   changed_when: false
 
