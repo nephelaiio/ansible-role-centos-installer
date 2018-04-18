@@ -5,6 +5,8 @@
 
 # centos_preseed_url: define to force netbooting
 
+# centos_root_password: define to set root pass, defaults to value of centos_installer_password
+
 centos_installer_package_state: present
 
 centos_installer_target_dir: "/tmp"

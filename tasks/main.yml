@@ -74,11 +74,13 @@
     timezone: "{{ centos_installer_timezone }}"
     username: "{{ centos_installer_username }}"
     password: "{{ centos_installer_password }}"
+    root_password: "{{ centos_root_password | default(centos_installer_password) }}"
     homedir: "{{ centos_installer_userhome | default('/home/' + centos_installer_username) }}"
     sshkey: "{{ centos_installer_sshkey }}"
     interface: "{{ centos_installer_interface }}"
     disk: "{{ centos_installer_disk | default('') }}"
     halt: "{{ centos_installer_halt | default('false') }}"
+    timezone: "{{ centos_installer_timezone }}"
   become: yes
   changed_when: false
 

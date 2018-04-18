@@ -10,6 +10,7 @@ ignoredisk --only-use={{ disk }}
 keyboard --vckeymap=us --xlayouts='us'
 lang en_US.UTF-8
 bootloader --location=mbr --boot-drive=sda
+timezone {{ timezone }}
 
 # automatic partitioning
 clearpart --all --initlabel
@@ -26,6 +27,7 @@ firewall --disabled
 selinux --disabled
 
 # user configuration
+rootpw --iscrypted {{ root_password }}
 user --name={{ username }} --homedir={{ homedir }} --password={{ password }} --iscrypted
 
 # accept eula
