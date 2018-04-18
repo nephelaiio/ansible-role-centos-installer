@@ -1,6 +1,9 @@
 # configure authentication options
 auth --enableshadow --passalgo=sha512
 
+# configure installation source
+url --url {{ url }}
+
 # install from cdrom
 install
 cdrom

@@ -27,21 +27,22 @@
     state: directory
     path: "{{ centos_installer_target_dir }}"
 
-- name: register default centos iso url
+- name: register default centos urls
   set_fact:
-    src_url: "{{ default_centos_iso_url }}"
+    iso_url: "{{ centos_iso_url | default(default_centos_iso_url) }}"
+    install_url: "{{ centos_install_url | default(default_centos_install_url) }}"
 
 - name: register source centos iso file
   set_fact:
-    src_iso: "{{ centos_installer_target_dir }}/centos.iso"
+    iso_path: "{{ centos_installer_target_dir }}/centos.iso"
 
 - name: fetch centos source iso
   get_url:
-    url: "{{ centos_centos_image_url | default(src_url) }}"
-    dest: "{{ src_iso }}"
+    url: "{{ centos_centos_image_url | default(iso_url) }}"
+    dest: "{{ iso_path }}"
 
 - name: extract centos source iso
-  command: "7z x {{ src_iso }}"
+  command: "7z x {{ iso_path }}"
   args:
     chdir: "{{ tmpdir_dest.path }}"
   changed_when: false
@@ -70,6 +71,7 @@
     src: "{{ centos_ks_template }}"
     dest: "{{ tmpdir_dest.path }}/{{ ks_file }}"
   vars:
+    url: "{{ install_url }}"
     hostname: "{{ centos_installer_hostname }}"
     timezone: "{{ centos_installer_timezone }}"
     username: "{{ centos_installer_username }}"
