@@ -29,8 +29,8 @@
 
 - name: register default centos urls
   set_fact:
-    iso_url: "{{ centos_iso_url | default(default_centos_iso_url) }}"
-    install_url: "{{ centos_install_url | default(default_centos_install_url) }}"
+    iso_url: "{{ centos_installer_image | default(default_centos_installer_image) }}"
+    install_url: "{{ centos_installer_url | default(default_centos_installer_url) }}"
 
 - name: register source centos iso file
   set_fact:
