@@ -68,7 +68,7 @@
 
 - name: create kickstart file
   template:
-    src: "{{ centos_ks_template }}"
+    src: "{{ centos_installer_ks_template }}"
     dest: "{{ tmpdir_dest.path }}/{{ ks_file }}"
   vars:
     url: "{{ install_url }}"
