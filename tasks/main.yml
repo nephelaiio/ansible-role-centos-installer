@@ -29,8 +29,7 @@
 
 - name: register default centos urls
   set_fact:
-    iso_url: "{{ centos_installer_image | default(default_centos_installer_image) }}"
-    install_url: "{{ centos_installer_url | default(default_centos_installer_url) }}"
+    iso_url: "{{ centos_installer_image }}"
 
 - name: register source centos iso file
   set_fact:
@@ -41,12 +40,62 @@
     url: "{{ centos_centos_image_url | default(iso_url) }}"
     dest: "{{ iso_path }}"
 
-- name: extract centos source iso
-  command: "7z x {{ iso_path }}"
-  args:
-    chdir: "{{ tmpdir_dest.path }}"
+- name: create temporary mount fstab
+  tempfile:
+    state: directory
+    prefix: fstab
+  register: mntfile_dest
+  changed_when: false
+
+- name: create temporary mount directory
+  tempfile:
+    state: directory
+    prefix: mnt
+  register: mntdir_dest
+  changed_when: false
+
+- name: mount centos source iso
+  mount:
+    src: "{{ iso_path }}" 
+    path: "{{ mntdir_dest.path }}"
+    state: mounted
+    opts: loop
+    fstype: iso9660
   changed_when: false
   become: yes
+
+- name: extract source iso files
+  command: "rsync -a {{ mntdir_dest.path }}/ {{ tmpdir_dest.path }}/"
+  become: yes
+  changed_when: false
+
+- debug:
+    msg: "{{ tmpdir_dest.path }}"
+
+- pause:
+
+- name: unmount centos source iso
+  mount:
+    src: "{{ iso_path }}" 
+    path: "{{ mntdir_dest.path }}"
+    state: unmounted
+    opts: loop
+  changed_when: false
+  become: yes
+
+- name: remove temporary mount directory
+  file:
+    path: "{{ mntdir_dest.path }}"
+    state: absent
+  become: yes
+  changed_when: false
+
+- name: remove temporary mount fstab
+  file:
+    path: "{{ mntfile_dest.path }}"
+    state: absent
+  become: yes
+  changed_when: false
 
 - name: check isolinux configuration file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.cfg"
@@ -71,7 +120,7 @@
     src: "{{ centos_installer_ks_template }}"
     dest: "{{ tmpdir_dest.path }}/{{ ks_file }}"
   vars:
-    url: "{{ install_url }}"
+    volume: "{{ centos_installer_iso_volume }}"
     hostname: "{{ centos_installer_hostname }}"
     timezone: "{{ centos_installer_timezone }}"
     username: "{{ centos_installer_username }}"
@@ -81,6 +130,8 @@
     sshkey: "{{ centos_installer_sshkey }}"
     interface: "{{ centos_installer_interface }}"
     halt: "{{ centos_installer_halt | default('false') }}"
+    keyboard: "{{ centos_installer_ks_keyboard }}"
+    disk: "{{ centos_installer_disk }}"
   become: yes
   changed_when: false
 
@@ -96,6 +147,7 @@
     dest: "{{ isolinux_bootdest.stdout }}"
   vars:
     ks_url: "cdrom:/{{ ks_file }}"
+    volume: "{{ centos_installer_iso_volume }}"
   become: yes
   changed_when: false
 
@@ -117,7 +169,7 @@
     isolinux_cat: "{{ isolinux_bootcatdest.stdout | regex_replace(tmpdir_dest.path + '/', '') }}"
 
 - name: create centos autoinstall iso
-  command: "mkisofs -D -r -V 'ubuntu' -cache-inodes -J -cache-inodes -J -l -b {{ isolinux_bin }} -c {{ isolinux_cat }} -no-emul-boot -boot-load-size 4 -boot-info-table -o {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso ."
+  command: "mkisofs -J -R -v -T -V '{{ centos_installer_iso_volume }}' -b {{ isolinux_bin }} -c {{ isolinux_cat }} -no-emul-boot -boot-load-size 4 -boot-info-table -o {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso ."
   args:
     chdir: "{{ tmpdir_dest.path }}"
   become: yes
@@ -125,6 +177,11 @@
 
 - name: make iso bootable
   command: "isohybrid {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso"
+  become: yes
+  changed_when: false
+
+- name: implant iso md5sum
+  command: "implantisomd5 {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso"
   become: yes
   changed_when: false
 

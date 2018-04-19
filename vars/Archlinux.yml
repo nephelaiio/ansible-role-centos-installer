@@ -2,5 +2,5 @@
 centos_installer_packages_default:
   - syslinux
   - openssh
-  - p7zip
   - cdrtools
+  - isomd5sum
