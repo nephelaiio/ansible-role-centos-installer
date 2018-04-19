@@ -3,8 +3,6 @@
 
 # centos_installer_image_url: define to override the ubuntu iso location (e.g. when using a local proxy)
 
-# centos_preseed_url: define to force netbooting
-
 # centos_root_password: define to set root pass, defaults to value of centos_installer_password
 
 centos_installer_package_state: present
