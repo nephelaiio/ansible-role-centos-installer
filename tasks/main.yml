@@ -69,11 +69,6 @@
   become: yes
   changed_when: false
 
-- debug:
-    msg: "{{ tmpdir_dest.path }}"
-
-- pause:
-
 - name: unmount centos source iso
   mount:
     src: "{{ iso_path }}" 
