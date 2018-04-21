@@ -127,6 +127,7 @@
     halt: "{{ centos_installer_halt | default('false') }}"
     keyboard: "{{ centos_installer_ks_keyboard }}"
     disk: "{{ centos_installer_disk }}"
+    baseurl: "{{ centos_installer_baseurl | default('') }}"
   become: yes
   changed_when: false
 
