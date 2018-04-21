@@ -9,7 +9,6 @@
       skip: true
 
 - name: install packages
-  become: yes
   package:
     name: "{{ item }}"
     state: "{{ centos_installer_package_state }}"
@@ -20,7 +19,6 @@
     state: directory
     prefix: iso
   register: tmpdir_dest
-  changed_when: false
 
 - name: create centos image target directory
   file:
@@ -45,14 +43,12 @@
     state: directory
     prefix: fstab
   register: mntfile_dest
-  changed_when: false
 
 - name: create temporary mount directory
   tempfile:
     state: directory
     prefix: mnt
   register: mntdir_dest
-  changed_when: false
 
 - name: mount centos source iso
   mount:
@@ -61,13 +57,13 @@
     state: mounted
     opts: loop
     fstype: iso9660
-  changed_when: false
-  become: yes
 
 - name: extract source iso files
-  command: "rsync -a {{ mntdir_dest.path }}/ {{ tmpdir_dest.path }}/"
-  become: yes
-  changed_when: false
+  synchronize:
+    src: "{{ mntdir_dest.path }}/"
+    dest: "{{ tmpdir_dest.path }}/"
+    recursive: yes
+  delegate_to: "{{ inventory_hostname }}"
 
 - name: unmount centos source iso
   mount:
@@ -75,27 +71,20 @@
     path: "{{ mntdir_dest.path }}"
     state: unmounted
     opts: loop
-  changed_when: false
-  become: yes
 
 - name: remove temporary mount directory
   file:
     path: "{{ mntdir_dest.path }}"
     state: absent
-  become: yes
-  changed_when: false
 
 - name: remove temporary mount fstab
   file:
     path: "{{ mntfile_dest.path }}"
     state: absent
-  become: yes
-  changed_when: false
 
 - name: check isolinux configuration file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.cfg"
   register: isolinux_cfgdest
-  become: yes
   changed_when: false
 
 - name: configure isolinux
@@ -103,8 +92,6 @@
     path: "{{ isolinux_cfgdest.stdout }}"
     regexp: 'timeout\s+[0-9]+'
     line: 'timeout 1'
-  become: yes
-  changed_when: false
 
 - name: register kickstart file location
   set_fact:
@@ -128,13 +115,10 @@
     keyboard: "{{ centos_installer_ks_keyboard }}"
     disk: "{{ centos_installer_disk }}"
     baseurl: "{{ centos_installer_baseurl | default('') }}"
-  become: yes
-  changed_when: false
 
 - name: check isolinux boot file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.cfg"
   register: isolinux_bootdest
-  become: yes
   changed_when: false
 
 - name: set bootloader kickstart configuration
@@ -144,19 +128,15 @@
   vars:
     ks_url: "cdrom:/{{ ks_file }}"
     volume: "{{ centos_installer_iso_volume }}"
-  become: yes
-  changed_when: false
 
 - name: check isolinux bin file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.bin"
   register: isolinux_bindest
-  become: yes
   changed_when: false
 
 - name: check isolinux boot cat file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name boot.cat"
   register: isolinux_bootcatdest
-  become: yes
   changed_when: false
 
 - name: compute isolinux bin
@@ -168,22 +148,17 @@
   command: "mkisofs -J -R -v -T -V '{{ centos_installer_iso_volume }}' -b {{ isolinux_bin }} -c {{ isolinux_cat }} -no-emul-boot -boot-load-size 4 -boot-info-table -o {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso ."
   args:
     chdir: "{{ tmpdir_dest.path }}"
-  become: yes
   changed_when: false
 
 - name: make iso bootable
   command: "isohybrid {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso"
-  become: yes
   changed_when: false
 
 - name: implant iso md5sum
   command: "implantisomd5 {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso"
-  become: yes
   changed_when: false
 
 - name: remove temporary directories
   file:
     path: "{{ tmpdir_dest.path }}"
     state: absent
-  become: yes
-  changed_when: false
