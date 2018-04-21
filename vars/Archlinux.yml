@@ -1,6 +1,5 @@
 ---
 centos_installer_packages_default:
   - syslinux
-  - openssh
   - cdrtools
   - isomd5sum
