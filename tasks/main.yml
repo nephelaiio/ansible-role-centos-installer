@@ -35,7 +35,7 @@
 
 - name: fetch centos source iso
   get_url:
-    url: "{{ centos_centos_image_url | default(iso_url) }}"
+    url: "{{ centos_installer_image_url | default(iso_url) }}"
     dest: "{{ iso_path }}"
 
 - name: create temporary mount fstab
