@@ -57,6 +57,7 @@
     state: mounted
     opts: loop
     fstype: iso9660
+  become: "{{ centos_installer_become }}"
 
 - name: extract source iso files
   synchronize:
@@ -70,6 +71,7 @@
     path: "{{ mntdir_dest.path }}"
     state: unmounted
     opts: loop
+  become: "{{ centos_installer_become }}"
 
 - name: remove temporary mount directory
   file:
