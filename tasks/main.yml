@@ -63,7 +63,7 @@
   args:
     warn: no
   tags:
-- skip_ansible_lint
+    - skip_ansible_lint
 
 - name: unmount centos source iso
   mount:
