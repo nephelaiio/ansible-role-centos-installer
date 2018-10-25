@@ -37,3 +37,8 @@ centos_installer_disk: sda
 centos_installer_iso_volume: centos
 
 centos_installer_ks_keyboard: us
+
+centos_installer_ks_extra: ''
+
+centos_installer_ks_partitioning: |
+  autopart

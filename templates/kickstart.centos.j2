@@ -17,7 +17,7 @@ bootloader --location=mbr --driveorder={{ disk }}
 
 zerombr
 clearpart --all --initlabel
-autopart
+{{ partitioning }}
 
 user --name={{ username }} --homedir={{ homedir }} --password={{ password }} --iscrypted
 
@@ -26,6 +26,8 @@ poweroff
 {% else %}
 reboot --eject
 {% endif %}
+
+{{ kickstart_extra }}
 
 %packages --nobase
 @core
