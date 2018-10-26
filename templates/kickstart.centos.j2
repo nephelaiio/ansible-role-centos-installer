@@ -27,7 +27,7 @@ poweroff
 reboot --eject
 {% endif %}
 
-{{ kickstart_extra }}
+
 
 %packages --nobase
 @core
@@ -42,6 +42,9 @@ echo "{{ username }} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/{{ username }}
 chmod 440 /etc/sudoers.d/{{ username }}
 sed -r -i -e 's/^#?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sed -r -i -e 's/^#?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+
+{{ kickstart_extra }}
+
 {% if baseurl != '' %}
 sudo sed -i -e 's/^enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf
 cat <<-EOF > /etc/yum.repos.d/CentOS-Base.repo
