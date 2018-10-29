@@ -1,9 +1,6 @@
-# nephelaiio.centos-installer
+# arruko.rhel-installer
 
-[![Build Status](https://travis-ci.org/nephelaiio/ansible-role-centos-installer.svg?branch=master)](https://travis-ci.org/nephelaiio/ansible-role-centos-installer)
-[![Ansible Galaxy](http://img.shields.io/badge/ansible--galaxy-nephelaiio.centos-installer-blue.svg)](https://galaxy.ansible.com/nephelaiio/centos-installer/)
-
-An [ansible role](https://galaxy.ansible.com/nephelaiio/centos-installer) to produce CentOS autoinstall isos
+An [ansible role](https://galaxy.ansible.com/arruko/rhel-installer) to produce RHEL autoinstall isos
 
 ## Role Variables
 
@@ -13,7 +10,7 @@ Please refer to the [defaults file](/defaults/main.yml) for an up to date list o
 
 - hosts: servers
   roles:
-     - role: nephelaiio.centos-installer
+     - role: arruko.rhel-installer
 
 
 ## Testing

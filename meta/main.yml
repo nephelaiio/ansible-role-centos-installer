@@ -1,7 +1,7 @@
 ---
 galaxy_info:
-  author: Ted Cook
-  description: An Ansible role to produce CentOS master iso images
+  author: Jimmy Herrera (forked from nephelaiio)
+  description: An Ansible role to produce RHEL master iso images
   license: MIT
   min_ansible_version: 2.2
   platforms:
@@ -18,7 +18,9 @@ galaxy_info:
       versions:
         - stretch
   galaxy_tags:
-    - centos-installer
+    - rhel
+    - installer
+    - iso
 
 dependencies:
   - role: nephelaiio.plugins

@@ -11,8 +11,8 @@
 - name: install packages
   package:
     name: "{{ item }}"
-    state: "{{ centos_installer_package_state }}"
-  with_items: "{{ centos_installer_packages | default(centos_installer_packages_default) }}"
+    state: "{{ rhel_installer_package_state }}"
+  with_items: "{{ rhel_installer_packages | default(rhel_installer_packages_default) }}"
 
 - name: create temporary target directory
   tempfile:
@@ -20,22 +20,22 @@
     prefix: iso
   register: tmpdir_dest
 
-- name: create centos image target directory
+- name: create rhel image target directory
   file:
     state: directory
-    path: "{{ centos_installer_target_dir }}"
+    path: "{{ rhel_installer_target_dir }}"
 
-- name: register default centos urls
+- name: register default rhel urls
   set_fact:
-    iso_url: "{{ centos_installer_image }}"
+    iso_url: "{{ rhel_installer_image }}"
 
-- name: register source centos iso file
+- name: register source rhel iso file
   set_fact:
-    iso_path: "{{ centos_installer_target_dir }}/centos.iso"
+    iso_path: "{{ rhel_installer_target_dir }}/rhel.iso"
 
-- name: fetch centos source iso
+- name: fetch rhel source iso
   get_url:
-    url: "{{ centos_installer_image_url | default(iso_url) }}"
+    url: "{{ rhel_installer_image_url | default(iso_url) }}"
     dest: "{{ iso_path }}"
 
 - name: create temporary mount fstab
@@ -50,7 +50,7 @@
     prefix: mnt
   register: mntdir_dest
 
-- name: mount centos source iso
+- name: mount rhel source iso
   mount:
     src: "{{ iso_path }}"
     path: "{{ mntdir_dest.path }}"
@@ -65,7 +65,7 @@
   tags:
     - skip_ansible_lint
 
-- name: unmount centos source iso
+- name: unmount rhel source iso
   mount:
     src: "{{ iso_path }}"
     path: "{{ mntdir_dest.path }}"
@@ -99,24 +99,24 @@
 
 - name: create kickstart file
   template:
-    src: "{{ centos_installer_ks_template }}"
+    src: "{{ rhel_installer_ks_template }}"
     dest: "{{ tmpdir_dest.path }}/{{ ks_file }}"
   vars:
-    volume: "{{ centos_installer_iso_volume }}"
-    hostname: "{{ centos_installer_hostname }}"
-    timezone: "{{ centos_installer_timezone }}"
-    username: "{{ centos_installer_username }}"
-    password: "{{ centos_installer_password }}"
-    root_password: "{{ centos_root_password | default(centos_installer_password) }}"
-    homedir: "{{ centos_installer_userhome | default('/home/' + centos_installer_username) }}"
-    sshkey: "{{ centos_installer_sshkey }}"
-    interface: "{{ centos_installer_interface }}"
-    halt: "{{ centos_installer_halt | default('false') }}"
-    keyboard: "{{ centos_installer_ks_keyboard }}"
-    disk: "{{ centos_installer_disk }}"
-    baseurl: "{{ centos_installer_baseurl | default('') }}"
-    partitioning: "{{ centos_installer_ks_partitioning }}"
-    kickstart_extra: "{{ centos_installer_ks_extra | default('') }}"
+    volume: "{{ rhel_installer_iso_volume }}"
+    hostname: "{{ rhel_installer_hostname }}"
+    timezone: "{{ rhel_installer_timezone }}"
+    username: "{{ rhel_installer_username }}"
+    password: "{{ rhel_installer_password }}"
+    root_password: "{{ rhel_root_password | default(rhel_installer_password) }}"
+    homedir: "{{ rhel_installer_userhome | default('/home/' + rhel_installer_username) }}"
+    sshkey: "{{ rhel_installer_sshkey }}"
+    interface: "{{ rhel_installer_interface }}"
+    halt: "{{ rhel_installer_halt | default('false') }}"
+    keyboard: "{{ rhel_installer_ks_keyboard }}"
+    disk: "{{ rhel_installer_disk }}"
+    baseurl: "{{ rhel_installer_baseurl | default('') }}"
+    partitioning: "{{ rhel_installer_ks_partitioning }}"
+    kickstart_extra: "{{ rhel_installer_ks_extra | default('') }}"
 
 - name: check isolinux boot file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.cfg"
@@ -129,7 +129,7 @@
     dest: "{{ isolinux_bootdest.stdout }}"
   vars:
     ks_url: "cdrom:/{{ ks_file }}"
-    volume: "{{ centos_installer_iso_volume }}"
+    volume: "{{ rhel_installer_iso_volume }}"
 
 - name: check isolinux bin file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.bin"
@@ -146,18 +146,18 @@
     isolinux_bin: "{{ isolinux_bindest.stdout | regex_replace(tmpdir_dest.path + '/', '') }}"
     isolinux_cat: "{{ isolinux_bootcatdest.stdout | regex_replace(tmpdir_dest.path + '/', '') }}"
 
-- name: create centos autoinstall iso
-  command: "mkisofs -J -R -v -T -V '{{ centos_installer_iso_volume }}' -b {{ isolinux_bin }} -c {{ isolinux_cat }} -no-emul-boot -boot-load-size 4 -boot-info-table -o {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso ."
+- name: create rhel autoinstall iso
+  command: "mkisofs -J -R -v -T -V '{{ rhel_installer_iso_volume }}' -b {{ isolinux_bin }} -c {{ isolinux_cat }} -no-emul-boot -boot-load-size 4 -boot-info-table -o {{ rhel_installer_target_dir }}/{{ rhel_installer_hostname }}.iso ."
   args:
     chdir: "{{ tmpdir_dest.path }}"
   changed_when: false
 
 - name: make iso bootable
-  command: "isohybrid {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso"
+  command: "isohybrid {{ rhel_installer_target_dir }}/{{ rhel_installer_hostname }}.iso"
   changed_when: false
 
 - name: implant iso md5sum
-  command: "implantisomd5 {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso"
+  command: "implantisomd5 {{ rhel_installer_target_dir }}/{{ rhel_installer_hostname }}.iso"
   changed_when: false
 
 - name: remove temporary directories

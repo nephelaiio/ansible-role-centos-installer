@@ -27,7 +27,7 @@ poweroff
 reboot --eject
 {% endif %}
 
-
+subscription-manager repo-override --repo=rhel-7-server-rpms --add=priority:1
 
 %packages --nobase
 @core
@@ -45,26 +45,4 @@ sed -r -i -e 's/^#?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 
 {{ kickstart_extra }}
 
-{% if baseurl != '' %}
-sudo sed -i -e 's/^enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf
-cat <<-EOF > /etc/yum.repos.d/CentOS-Base.repo
-[base]
-name=CentOS-\$releasever - Base
-baseurl={{ baseurl }}/\$releasever/os/\$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
-
-#released updates
-[updates]
-name=CentOS-\$releasever - Updates
-baseurl={{ baseurl }}/\$releasever/updates/\$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
-
-[extras]
-name=CentOS-$releasever - Extras
-baseurl={{ baseurl }}/$releasever/extras/$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
-{% endif %}
 %end
