@@ -116,7 +116,7 @@
     disk: "{{ centos_installer_disk }}"
     baseurl: "{{ centos_installer_baseurl | default('') }}"
     partitioning: "{{ centos_installer_ks_partitioning }}"
-    extra_parameters: "{{ centos_installer_ks_extra | default('') }}"
+    kickstart_extra: "{{ centos_installer_ks_extra | default('') }}"
 
 - name: check isolinux boot file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.cfg"
