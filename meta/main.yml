@@ -18,7 +18,8 @@ galaxy_info:
       versions:
         - stretch
   galaxy_tags:
-    - centos-installer
+    - centos
+    - installer
 
 dependencies:
   - role: nephelaiio.plugins

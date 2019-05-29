@@ -1,11 +1,11 @@
 ---
 # centos_installer_packages: defaults per os family
 
-# centos_installer_image_url: define to override the ubuntu iso location (e.g. when using a local proxy)
+# centos_installer_image_url: define to override the ubuntu iso location
 
-# centos_root_password: define to set root pass, defaults to value of centos_installer_password
+# centos_root_password: alias for centos_installer_password
 
-# centos_installer_baseurl: define to configure baseurl parameter for base repositories
+# centos_installer_baseurl: baseurl parameter for centos repositories
 
 centos_installer_package_state: present
 
@@ -30,7 +30,8 @@ centos_installer_halt: false  # true | false
 
 centos_installer_ks_template: kickstart.centos.j2
 
-centos_installer_image: http://mirrors.liquidweb.com/CentOS/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso
+centos_installer_image: |
+  http://mirrors.liquidweb.com/CentOS/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso
 
 centos_installer_disk: sda
 

@@ -28,6 +28,7 @@ pip install -r https://raw.githubusercontent.com/nephelaiio/ansible-role-require
 
 Role is tested against the following distributions (docker images):
   * Ubuntu Xenial
+  * Ubuntu Bionic
 
 You can test the role directly from sources using command `molecule test`
 

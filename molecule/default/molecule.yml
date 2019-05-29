@@ -5,9 +5,13 @@ driver:
   name: docker
 lint:
   name: yamllint
+  options:
+    config-file: .yamllint
 platforms:
-  - name: ubuntu
+  - name: xenial
     image: ubuntu:xenial
+  - name: bionic
+    image: ubuntu:bionic
 provisioner:
   name: ansible
   lint:
@@ -18,7 +22,3 @@ scenario:
     - dependency
     - syntax
     - lint
-verifier:
-  name: testinfra
-  lint:
-    name: flake8
