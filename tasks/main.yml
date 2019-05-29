@@ -147,9 +147,12 @@
     isolinux_cat: "{{ isolinux_bootcatdest.stdout | regex_replace(tmpdir_dest.path + '/', '') }}"
 
 - name: create centos autoinstall iso
-  command: "mkisofs -J -R -v -T -V '{{ centos_installer_iso_volume }}' -b {{ isolinux_bin }} -c {{ isolinux_cat }} -no-emul-boot -boot-load-size 4 -boot-info-table -o {{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso ."
+  command: "{{ mkisofs_cmd }} -V '{{ centos_installer_iso_volume }}' -b {{ isolinux_bin }} -c {{ isolinux_cat }} -o {{ mkisofs_out }} ."
   args:
     chdir: "{{ tmpdir_dest.path }}"
+  vars:
+    mkisofs_cmd: "mkisofs -J -R -v -T -no-emul-boot -boot-load-size 4 -boot-info-table"
+    mkisofs_out: "{{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.iso"
   changed_when: false
 
 - name: make iso bootable

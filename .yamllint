@@ -12,7 +12,5 @@ rules:
   brackets:
     max-spaces-inside: 1
     level: error
-  line-length:
-    level: warning
-  truthy:
-    level: warning
+  line-length: disable
+  truthy: disable
