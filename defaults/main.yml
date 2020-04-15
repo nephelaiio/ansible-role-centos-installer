@@ -11,6 +11,8 @@ centos_installer_package_state: present
 
 centos_installer_target_dir: "/tmp"
 
+centos_installer_target_filename: centos.iso
+
 centos_installer_release: 16.04.3
 
 centos_installer_hostname: host.example.com
