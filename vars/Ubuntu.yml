@@ -6,3 +6,4 @@ centos_installer_packages_default:
   - genisoimage
   - isomd5sum
   - createrepo
+  - p7zip-full
