@@ -32,7 +32,7 @@
 
 - name: register source centos iso file
   set_fact:
-    iso_path: "{{ centos_installer_target_dir }}/{{ centos_installer_target_file }}"
+    iso_path: "{{ centos_installer_target_dir }}/{{ centos_installer_target_filename }}"
 
 - name: fetch centos source iso
   get_url:
