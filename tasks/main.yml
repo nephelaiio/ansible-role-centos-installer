@@ -151,15 +151,15 @@
     chdir: "{{ tmpdir_dest.path }}"
   vars:
     mkisofs_cmd: "mkisofs -J -R -v -T -no-emul-boot -boot-load-size 4 -boot-info-table"
-    mkisofs_out: "{{ centos_installer_target_dir }}/{{ centos_installer_target_filename }}.iso"
+    mkisofs_out: "{{ centos_installer_target_dir }}/{{ centos_installer_target_filename }}"
   changed_when: false
 
 - name: make iso bootable
-  command: "isohybrid {{ centos_installer_target_dir }}/{{ centos_installer_target_filename }}.iso"
+  command: "isohybrid {{ centos_installer_target_dir }}/{{ centos_installer_target_filename }}"
   changed_when: false
 
 - name: implant iso md5sum
-  command: "implantisomd5 {{ centos_installer_target_dir }}/{{ centos_installer_target_filename }}.iso"
+  command: "implantisomd5 {{ centos_installer_target_dir }}/{{ centos_installer_target_filename }}"
   changed_when: false
 
 - name: remove temporary directories
