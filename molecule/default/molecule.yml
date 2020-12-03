@@ -3,9 +3,7 @@ dependency:
   name: galaxy
 driver:
   name: docker
-lint: |
-  yamllint .
-  ansible-lint .
+lint: ''
 platforms:
   - name: instance
     image: "geerlingguy/docker-${MOLECULE_DISTRO:-centos7}-ansible:latest"
@@ -24,4 +22,3 @@ scenario:
   test_sequence:
     - dependency
     - syntax
-    - lint
