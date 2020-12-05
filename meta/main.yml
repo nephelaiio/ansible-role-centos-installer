@@ -1,5 +1,6 @@
 ---
 galaxy_info:
+  role_name: centos-installer
   author: Ted Cook
   description: An Ansible role to produce CentOS master iso images
   license: MIT
