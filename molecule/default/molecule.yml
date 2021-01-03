@@ -3,10 +3,9 @@ dependency:
   name: galaxy
 driver:
   name: docker
-lint: ''
 platforms:
   - name: instance
-    image: "geerlingguy/docker-${MOLECULE_DISTRO:-centos7}-ansible:latest"
+    image: "${MOLECULE_DOCKER_IMAGE}"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
@@ -22,3 +21,5 @@ scenario:
   test_sequence:
     - dependency
     - syntax
+verifier:
+  name: testinfra
