@@ -1,7 +1,7 @@
 # nephelaiio.centos-installer
 
-[![Build Status](https://github.com/nephelaiio/ansible-role-centos-installer/workflows/.github/workflows/main.yml/badge.svg)](https://travis-ci.org/nephelaiio/ansible-role-centos-installer)
-[![Ansible Galaxy](http://img.shields.io/badge/ansible--galaxy-nephelaiio.centos-installer-blue.svg)](https://galaxy.ansible.com/nephelaiio/centos-installer/)
+[![Build Status](https://github.com/nephelaiio/ansible-role-centos-installer/workflows/CI/badge.svg)](https://github.com/nephelaiio/ansible-role-centos-installer/actions)
+[![Ansible Galaxy](http://img.shields.io/badge/ansible--galaxy-nephelaiio.centos--installer-blue.svg)](https://galaxy.ansible.com/nephelaiio/centos-installer/)
 
 An [ansible role](https://galaxy.ansible.com/nephelaiio/centos-installer) to produce CentOS autoinstall isos
 
