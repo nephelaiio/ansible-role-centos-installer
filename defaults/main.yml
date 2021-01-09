@@ -1,5 +1,18 @@
 ---
-# centos_installer_packages: defaults per os family
+# centos_installer_packages: define to override
+centos_installer_packages_default:
+  archlinux:
+    - syslinux
+    - cdrtools
+    - isomd5sum
+  ubuntu:
+    - syslinux
+    - syslinux-utils
+    - openssh-client
+    - genisoimage
+    - isomd5sum
+    - createrepo
+    - p7zip-full
 
 # centos_installer_image_url: define to override the ubuntu iso location
 

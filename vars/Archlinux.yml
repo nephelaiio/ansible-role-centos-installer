@@ -1,5 +1,0 @@
----
-centos_installer_packages_default:
-  - syslinux
-  - cdrtools
-  - isomd5sum
