@@ -12,10 +12,10 @@ centos_installers:
     url: "{{ centos7_url | default('http://mirror.rackspace.com/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-2009.iso') }}"
   stream8:
     dest: file://{{ playbook_dir }}/stream8.iso
-    url: "{{ stream8_url | default('http://mirror.rackspace.com/CentOS/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-20210204-boot.iso }}"
+    url: "{{ stream8_url | default('http://mirror.rackspace.com/CentOS/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-20210204-boot.iso') }}"
   alma8:
     dest: file://{{ playbook_dir }}/alma8.iso
-    url: "{{ alma8_url | default('https://repo.almalinux.org/almalinux/8.3-beta/isos/x86_64/AlmaLinux-8.3-beta-1-x86_64-minimal.iso }}"
+    url: "{{ alma8_url | default('https://repo.almalinux.org/almalinux/8.3-beta/isos/x86_64/AlmaLinux-8.3-beta-1-x86_64-minimal.iso') }}"
 vms:
   - centos_installer_hostname: centos7-lvm
     centos_installer_ref: centos7
