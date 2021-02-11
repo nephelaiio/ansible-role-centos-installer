@@ -1,0 +1,61 @@
+---
+- name: Prepare
+
+  hosts: all
+
+  become: yes
+
+  vars_files:
+    - ../vars.yml
+
+  tasks:
+
+    - name: destroy vm
+      virt:
+        command: destroy
+        name: "{{ vm.centos_installer_hostname }}"
+      loop_control:
+        loop_var: vm
+        label: "{{ vm.centos_installer_hostname }}"
+      loop: "{{ vms }}"
+      failed_when: false
+
+    - name: undefine vm
+      virt:
+        command: undefine
+        name: "{{ vm.centos_installer_hostname }}"
+      loop_control:
+        loop_var: vm
+        label: "{{ vm.centos_installer_hostname }}"
+      loop: "{{ vms }}"
+      failed_when: false
+
+    - name: destroy disks
+      file:
+        path: "{{ vm_disk }}"
+        state: absent
+      vars:
+        vm_disk: "{{ playbook_dir }}/{{ vm.centos_installer_hostname }}.img"
+      loop_control:
+        loop_var: vm
+        label: "{{ vm.centos_installer_hostname }}"
+      loop: "{{ vms }}"
+
+    - name: unmasquerade bridge
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: "{{ ansible_default_ipv4.interface }}"
+        source: "{{ bridge_net }}"
+        destination: 0.0.0.0/0
+        jump: MASQUERADE
+        protocol: all
+        state: present
+
+    - name: detroy dummy bridge slave
+      command: "nmcli con del {{ bridge_name }}-{{ iface_name }}"
+      failed_when: false
+
+    - name: destroy dummy bridge
+      command: "nmcli con del {{ bridge_name }}"
+      failed_when: false

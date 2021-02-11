@@ -1,60 +1,35 @@
 ---
-# centos_installer_packages: define to override
-centos_installer_packages_default:
-  archlinux:
-    - syslinux
-    - cdrtools
-    - isomd5sum
-  ubuntu:
-    - syslinux
-    - syslinux-utils
-    - openssh-client
-    - genisoimage
-    - isomd5sum
-    - createrepo
-    - p7zip-full
-
-# centos_installer_image_url: define to override the ubuntu iso location
-
-# centos_root_password: alias for centos_installer_password
-
-# centos_installer_baseurl: baseurl parameter for centos repositories
-
+centos_installer_packages:
+  - syslinux
+  - syslinux-utils
+  - openssh-client
+  - genisoimage
+  - xorriso
+  - isomd5sum
+  - p7zip-full
 centos_installer_package_state: present
-
 centos_installer_target_dir: "/tmp"
-
-centos_installer_target_filename: centos.iso
-
+centos_installer_target_filename: "{{ centos_installer_hostname }}.iso"
 centos_installer_release: 16.04.3
-
 centos_installer_hostname: host.example.com
-
 centos_installer_timezone: America/Costa_Rica
-
-centos_installer_username:  # required
-
-centos_installer_password:  # required
-
-centos_installer_sshkey:  # required
-
+centos_installer_username: ansible
+centos_installer_password: "{{ 'changeme' | password_hash('sha512') }}"
+centos_installer_userhome: "/home/{{ centos_installer_username }}"
+centos_installer_root_password: "{{ 'changeme' | password_hash('sha512') }}"
+centos_installer_sshkey: '' # required
 centos_installer_interface:  # override seed file network autoconfiguration
   static: false
-
 centos_installer_halt: false  # true | false
-
 centos_installer_ks_template: kickstart.centos.j2
-
-centos_installer_image: |
+centos_installer_image_url: |
   http://mirrors.liquidweb.com/CentOS/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso
-
 centos_installer_disk: sda
-
 centos_installer_iso_volume: centos
-
+centos_installer_iso_path: "{{ centos_installer_target_dir }}/{{ centos_installer_hostname }}.orig.iso"
 centos_installer_ks_keyboard: us
-
 centos_installer_ks_extra: ''
-
 centos_installer_ks_partitioning: |
   autopart
+centos_installer_clearpart: clearpart --all --initlabel --disklabel=gpt
+centos_installer_baseurl: ''

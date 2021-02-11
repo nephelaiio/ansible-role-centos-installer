@@ -16,7 +16,7 @@ timezone {{ timezone }}
 bootloader --location=mbr --driveorder={{ disk }}
 
 zerombr
-clearpart --all --initlabel
+{{ clearpart }}
 {{ partitioning }}
 
 user --name={{ username }} --homedir={{ homedir }} --password={{ password }} --iscrypted

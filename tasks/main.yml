@@ -1,19 +1,7 @@
 ---
-- name: set variable overrides
-  set_fact:
-    _centos_installer_packages: "{{ centos_installer_packages | default(centos_installer_packages_default | sorted_get(overrides)) }}"
-  vars:
-    overrides:
-      - "{{ ansible_distribution | lower }}-{{ ansible_distribution_release | lower }}"
-      - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}"
-      - "{{ ansible_distribution | lower }}"
-      - "{{ ansible_os_family | lower }}"
-  tags:
-    - always
-
 - name: install packages
   package:
-    name: "{{ centos_installer_packages | default(centos_installer_packages_default) }}"
+    name: "{{ centos_installer_packages }}"
     state: "{{ centos_installer_package_state }}"
 
 - name: create temporary target directory
@@ -27,18 +15,10 @@
     state: directory
     path: "{{ centos_installer_target_dir }}"
 
-- name: register default centos urls
-  set_fact:
-    iso_url: "{{ centos_installer_image }}"
-
-- name: register source centos iso file
-  set_fact:
-    iso_path: "{{ centos_installer_target_dir }}/centos.iso"
-
 - name: fetch centos source iso
   get_url:
-    url: "{{ centos_installer_image_url | default(iso_url) }}"
-    dest: "{{ iso_path }}"
+    url: "{{ centos_installer_image | default(centos_installer_image_url) }}"
+    dest: "{{ centos_installer_iso_path }}"
 
 - name: create temporary mount fstab
   tempfile:
@@ -54,7 +34,7 @@
 
 - name: mount centos source iso
   mount:
-    src: "{{ iso_path }}"
+    src: "{{ centos_installer_iso_path }}"
     path: "{{ mntdir_dest.path }}"
     state: mounted
     opts: loop
@@ -69,10 +49,15 @@
 
 - name: unmount centos source iso
   mount:
-    src: "{{ iso_path }}"
+    src: "{{ centos_installer_iso_path }}"
     path: "{{ mntdir_dest.path }}"
     state: absent
     opts: loop
+
+- name: remove centos source iso
+  file:
+    path: "{{ centos_installer_iso_path }}"
+    state: absent
 
 - name: remove temporary mount directory
   file:
@@ -107,18 +92,19 @@
     volume: "{{ centos_installer_iso_volume }}"
     hostname: "{{ centos_installer_hostname }}"
     timezone: "{{ centos_installer_timezone }}"
+    root_password: "{{ centos_installer_root_password }}"
     username: "{{ centos_installer_username }}"
     password: "{{ centos_installer_password }}"
-    root_password: "{{ centos_root_password | default(centos_installer_password) }}"
-    homedir: "{{ centos_installer_userhome | default('/home/' + centos_installer_username) }}"
+    homedir: "{{ centos_installer_userhome }}"
     sshkey: "{{ centos_installer_sshkey }}"
     interface: "{{ centos_installer_interface }}"
     halt: "{{ centos_installer_halt | default('false') }}"
     keyboard: "{{ centos_installer_ks_keyboard }}"
     disk: "{{ centos_installer_disk }}"
-    baseurl: "{{ centos_installer_baseurl | default('') }}"
+    baseurl: "{{ centos_installer_baseurl }}"
     partitioning: "{{ centos_installer_ks_partitioning }}"
-    kickstart_extra: "{{ centos_installer_ks_extra | default('') }}"
+    kickstart_extra: "{{ centos_installer_ks_extra }}"
+    clearpart: "{{ centos_installer_clearpart  }}"
 
 - name: check isolinux boot file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.cfg"

@@ -1,0 +1,139 @@
+---
+- name: Spawn vms
+
+  hosts: all
+
+  become: yes
+
+  vars_files:
+    - ./vars.yml
+
+  vars:
+
+    vm_disk_size: 10G
+    vm_disk_format: raw
+
+  pre_tasks:
+
+    - name: update apt package cache
+      apt:
+        update_cache: yes
+      when: (ansible_os_family | lower) == 'debian'
+
+  tasks:
+
+    - name: cache installer files
+      get_url:
+        url: "{{ iso.value.url }}"
+        dest: "{{ iso.value.dest | urlsplit('path') }}"
+      loop_control:
+        loop_var: iso
+        label: "{{ iso.key }}"
+      loop: "{{ centos_installers | dict2items }}"
+
+    - name: create ssh keypair
+      openssh_keypair:
+        path: "{{ ssh_keypair }}"
+        type: rsa
+      register: molecule_keypair
+      become: no
+
+    - name: build installer isos
+      include_role:
+        name: nephelaiio.centos_installer
+      vars:
+        centos_installer_baseurl: "{{ centos_base_url | default('') }}"
+        centos_installer_target_dir: "{{ playbook_dir }}"
+        centos_installer_ks_partitioning: "{{ vm.centos_ks_partitioning }}"
+        centos_installer_interface_name: enp0s3
+        centos_installer_image_url: "{{ centos_installers[vm.centos_installer_ref].dest }}"
+        centos_installer_hostname: "{{ vm.centos_installer_hostname }}"
+        centos_installer_username: molecule
+        centos_installer_password: "{{ 'molecule' | password_hash('sha512') }}"
+        centos_installer_root_password: "{{ 'molecule' | password_hash('sha512') }}"
+        centos_installer_sshkey: "{{ molecule_keypair.public_key }}"
+        centos_installer_halt: false
+        centos_installer_interface: "{{ vm.centos_installer_interface }}"
+      loop_control:
+        loop_var: vm
+        label: "{{ vm.centos_installer_hostname }}"
+      loop: "{{ vms }}"
+
+    - block:
+
+        - name: destroy vm
+          virt:
+            command: destroy
+            name: "{{ vm.centos_installer_hostname }}"
+          loop_control:
+            loop_var: vm
+            label: "{{ vm.centos_installer_hostname }}"
+          loop: "{{ vms }}"
+          failed_when: false
+
+        - name: undefine vm
+          virt:
+            command: undefine
+            name: "{{ vm.centos_installer_hostname }}"
+          loop_control:
+            loop_var: vm
+            label: "{{ vm.centos_installer_hostname }}"
+          loop: "{{ vms }}"
+          failed_when: false
+
+        - name: destroy disks
+          file:
+            path: "{{ vm_disk }}"
+            state: absent
+          vars:
+            vm_disk: "{{ playbook_dir }}/{{ vm.centos_installer_hostname }}.img"
+          loop_control:
+            loop_var: vm
+            label: "{{ vm.centos_installer_hostname }}"
+          loop: "{{ vms }}"
+
+        - name: create disks
+          command: "qemu-img create {{ vm_disk }} {{ vm_disk_size }}"
+          args:
+            creates: "{{ vm_disk }}"
+          vars:
+            vm_disk: "{{ playbook_dir }}/{{ vm.centos_installer_hostname }}.img"
+          loop_control:
+            loop_var: vm
+            label: "{{ vm.centos_installer_hostname }}"
+          loop: "{{ vms }}"
+
+        - name: create vm
+          virt:
+            command: define
+            xml: "{{ xml_template }}"
+          vars:
+            vm_hostname: "{{ vm.centos_installer_hostname }}"
+            vm_bridge: "{{ bridge_name }}"
+            vm_iso: "{{ playbook_dir }}/{{ vm_hostname }}.iso"
+            vm_disk_path: "{{ playbook_dir }}/{{ vm.centos_installer_hostname }}.img"
+            vm_mac: "{{ '52:54:00' | random_mac(seed=vm_hostname)}}"
+            xml_template: "{{ lookup('template', 'vm.xml.j2') }}"
+          loop_control:
+            loop_var: vm
+            label: "{{ vm.centos_installer_hostname }}"
+          loop: "{{ vms }}"
+
+        - name: start vm
+          virt:
+            name: "{{ vm_hostname }}"
+            xml: "{{ xml_template }}"
+            state: running
+          vars:
+            vm_hostname: "{{ vm.centos_installer_hostname }}"
+            vm_bridge: "{{ bridge_name }}"
+            vm_iso: "{{ playbook_dir }}/{{ vm_hostname }}.iso"
+            vm_disk_path: "{{ vm.centos_installer_hostname }}.img"
+            vm_mac: "{{ '52:54:00' | random_mac(seed=vm_hostname)}}"
+            xml_template: "{{ lookup('template', 'vm.xml.j2') }}"
+          loop_control:
+            loop_var: vm
+            label: "{{ vm.centos_installer_hostname }}"
+          loop: "{{ vms }}"
+
+      when: (kvm_enabled | default('no')) | bool
