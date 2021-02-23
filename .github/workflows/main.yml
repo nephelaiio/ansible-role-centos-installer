@@ -55,7 +55,7 @@ jobs:
         run: pip3 install -r requirements.txt
 
       - name: Run Molecule tests.
-        run: molecule test -s iso
+        run: molecule test -s kvm
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
