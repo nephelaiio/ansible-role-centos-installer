@@ -1,5 +1,5 @@
 ---
-- name: Spawn vms
+- name: Spawn kvm guests
 
   hosts: all
 
@@ -8,17 +8,57 @@
   vars_files:
     - ./vars.yml
 
-  vars:
-
-    vm_disk_size: 10G
-    vm_disk_format: raw
-
   pre_tasks:
 
     - name: update apt package cache
       apt:
         update_cache: yes
       when: (ansible_os_family | lower) == 'debian'
+
+    - name: install disk utils
+      apt:
+        name:
+          - parted
+          - lvm2
+
+    - name: select EC2 NVMe disks
+      set_fact:
+        ec2_disks: "{{ ec2_disks | default([]) + [ec2_disk] }}"
+      vars:
+        ec2_disk: "/dev/{{ item.key }}"
+      when:
+        - item.value.model == 'Amazon EC2 NVMe Instance Storage'
+      loop_control:
+        label: "{{ item.key }}"
+      loop: "{{ ansible_devices | dict2items }}"
+
+    - block:
+
+        - name: create molecule vg
+          lvg:
+            vg: molecule
+            pvs: "{{ ','.join(ec2_disks) }}"
+
+        - name: create molecule lv
+          lvol:
+            vg: molecule
+            lv: molecule
+            size: "+100%FREE"
+
+        - name: create molecule filesystem
+          filesystem:
+            fstype: ext4
+            dev: /dev/mapper/molecule-molecule
+
+        - name: mount molecule filesystem
+          mount:
+            path: "{{ cache_dir }}"
+            src: /dev/mapper/molecule-molecule
+            fstype: ext4
+            state: mounted
+      when:
+        - ec2_disks is defined
+        - (ec2_disks | length) > 0
 
   tasks:
 
@@ -31,29 +71,25 @@
         label: "{{ iso.key }}"
       loop: "{{ centos_installers | dict2items }}"
 
-    - name: create ssh keypair
-      openssh_keypair:
-        path: "{{ ssh_keypair }}"
-        type: rsa
-      register: molecule_keypair
-      become: no
-
     - name: build installer isos
       include_role:
         name: nephelaiio.centos_installer
       vars:
-        centos_installer_baseurl: "{{ centos_base_url | default('') }}"
-        centos_installer_target_dir: "{{ playbook_dir }}"
-        centos_installer_ks_partitioning: "{{ vm.centos_ks_partitioning }}"
         centos_installer_interface_name: enp0s3
+        centos_installer_target_dir: "{{ cache_dir }}"
         centos_installer_image_url: "{{ centos_installers[vm.centos_installer_ref].dest }}"
         centos_installer_hostname: "{{ vm.centos_installer_hostname }}"
         centos_installer_username: molecule
         centos_installer_password: "{{ 'molecule' | password_hash('sha512') }}"
         centos_installer_root_password: "{{ 'molecule' | password_hash('sha512') }}"
-        centos_installer_sshkey: "{{ molecule_keypair.public_key }}"
+        centos_installer_baseurl: "{{ centos_base_url | default('') }}"
+        centos_installer_sshkey:
+          - "{{ lookup('file', kvm_key_pair_path + '.pub') }}"
+          - "{{ debug_pubkey }}"
         centos_installer_halt: false
         centos_installer_interface: "{{ vm.centos_installer_interface }}"
+        centos_installer_ks_partitioning: "{{ vm.centos_ks_partitioning }}"
+        centos_installer_ks_template: "{{ vm.centos_installer_ks_template }}"
       loop_control:
         loop_var: vm
         label: "{{ vm.centos_installer_hostname }}"
@@ -61,7 +97,7 @@
 
     - block:
 
-        - name: destroy vm
+        - name: destroy kvm guest
           virt:
             command: destroy
             name: "{{ vm.centos_installer_hostname }}"
@@ -71,7 +107,7 @@
           loop: "{{ vms }}"
           failed_when: false
 
-        - name: undefine vm
+        - name: undefine kvm guest
           virt:
             command: undefine
             name: "{{ vm.centos_installer_hostname }}"
@@ -81,45 +117,47 @@
           loop: "{{ vms }}"
           failed_when: false
 
-        - name: destroy disks
+        - name: destroy kvm guest disks
           file:
             path: "{{ vm_disk }}"
             state: absent
           vars:
-            vm_disk: "{{ playbook_dir }}/{{ vm.centos_installer_hostname }}.img"
+            vm_disk: "{{ cache_dir }}/{{ vm.centos_installer_hostname }}.img"
           loop_control:
             loop_var: vm
             label: "{{ vm.centos_installer_hostname }}"
           loop: "{{ vms }}"
 
-        - name: create disks
+        - name: create kvm guest disks
           command: "qemu-img create {{ vm_disk }} {{ vm_disk_size }}"
           args:
             creates: "{{ vm_disk }}"
           vars:
-            vm_disk: "{{ playbook_dir }}/{{ vm.centos_installer_hostname }}.img"
+            vm_disk: "{{ cache_dir }}/{{ vm.centos_installer_hostname }}.img"
+            vm_disk_size: "{{ vm.centos_installer_disk_size }}"
           loop_control:
             loop_var: vm
             label: "{{ vm.centos_installer_hostname }}"
           loop: "{{ vms }}"
 
-        - name: create vm
+        - name: create kvm guest
           virt:
             command: define
             xml: "{{ xml_template }}"
           vars:
             vm_hostname: "{{ vm.centos_installer_hostname }}"
             vm_bridge: "{{ bridge_name }}"
-            vm_iso: "{{ playbook_dir }}/{{ vm_hostname }}.iso"
-            vm_disk_path: "{{ playbook_dir }}/{{ vm.centos_installer_hostname }}.img"
+            vm_iso: "{{ cache_dir }}/{{ vm_hostname }}.iso"
+            vm_disk_path: "{{ cache_dir }}/{{ vm.centos_installer_hostname }}.img"
             vm_mac: "{{ '52:54:00' | random_mac(seed=vm_hostname)}}"
+            vm_disk_format: raw
             xml_template: "{{ lookup('template', 'vm.xml.j2') }}"
           loop_control:
             loop_var: vm
             label: "{{ vm.centos_installer_hostname }}"
           loop: "{{ vms }}"
 
-        - name: start vm
+        - name: start kvm guest
           virt:
             name: "{{ vm_hostname }}"
             xml: "{{ xml_template }}"
@@ -127,9 +165,10 @@
           vars:
             vm_hostname: "{{ vm.centos_installer_hostname }}"
             vm_bridge: "{{ bridge_name }}"
-            vm_iso: "{{ playbook_dir }}/{{ vm_hostname }}.iso"
+            vm_iso: "{{ cache_dir }}/{{ vm_hostname }}.iso"
             vm_disk_path: "{{ vm.centos_installer_hostname }}.img"
             vm_mac: "{{ '52:54:00' | random_mac(seed=vm_hostname)}}"
+            vm_disk_format: raw
             xml_template: "{{ lookup('template', 'vm.xml.j2') }}"
           loop_control:
             loop_var: vm

@@ -96,7 +96,7 @@
     username: "{{ centos_installer_username }}"
     password: "{{ centos_installer_password }}"
     homedir: "{{ centos_installer_userhome }}"
-    sshkey: "{{ centos_installer_sshkey }}"
+    sshkey: "{{ [centos_installer_sshkey] | flatten }}"
     interface: "{{ centos_installer_interface }}"
     halt: "{{ centos_installer_halt | default('false') }}"
     keyboard: "{{ centos_installer_ks_keyboard }}"
@@ -104,7 +104,15 @@
     baseurl: "{{ centos_installer_baseurl }}"
     partitioning: "{{ centos_installer_ks_partitioning }}"
     kickstart_extra: "{{ centos_installer_ks_extra }}"
-    clearpart: "{{ centos_installer_clearpart  }}"
+    clearpart: "{{ centos_installer_clearpart }}"
+
+- name: validate kickstart RHEL7 syntax
+  command: "ksvalidator {{ tmpdir_dest.path }}/{{ ks_file }} -v RHEL7"
+  when: centos_installer_ks_template == 'centos7'
+
+- name: validate kickstart RHEL8 syntax
+  command: "ksvalidator {{ tmpdir_dest.path }}/{{ ks_file }} -v RHEL8"
+  when: centos_installer_ks_template in ['centos8', 'stream8']
 
 - name: check isolinux boot file location
   command: "find {{ tmpdir_dest.path }} -maxdepth 2 -name isolinux.cfg"

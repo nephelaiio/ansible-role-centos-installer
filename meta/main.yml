@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   role_name: centos_installer
-  author: Ted Cook
+  author: nephelaiio
   description: An Ansible role to produce CentOS master iso images
   license: MIT
   min_ansible_version: 2.2
@@ -19,3 +19,6 @@ galaxy_info:
 
 dependencies:
   - role: nephelaiio.plugins
+  - role: nephelaiio.pip
+    vars:
+      pip_pip_names: pykickstart

@@ -1,5 +1,4 @@
-install
-cdrom
+url --url=http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/
 text
 lang en_US.UTF-8
 keyboard {{ keyboard }}
@@ -10,7 +9,7 @@ network  --onboot yes --bootproto=dhcp --hostname {{ hostname }}
 {% endif %}
 rootpw --iscrypted {{ root_password }}
 firewall --disabled
-authconfig --enableshadow --passalgo=sha512
+authselect select minimal
 selinux --disabled
 timezone {{ timezone }}
 bootloader --location=mbr --driveorder={{ disk }}
@@ -27,15 +26,15 @@ poweroff
 reboot --eject
 {% endif %}
 
-
-
-%packages --nobase
+%packages
 @core
 %end
 
 %post
 mkdir {{ homedir }}/.ssh
-echo '{{ sshkey }}' >> {{ homedir }}/.ssh/authorized_keys
+{% for key in sshkey %}
+    echo '{{ key }}' >> {{ homedir }}/.ssh/authorized_keys
+{% endfor %}
 chown -R {{ username }}:{{ username }} {{ homedir }}/.ssh
 echo "blacklist ipv6" >> /etc/modprobe.d/blacklist.conf
 echo "{{ username }} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/{{ username }}
@@ -52,19 +51,19 @@ cat <<-EOF > /etc/yum.repos.d/CentOS-Base.repo
 name=CentOS-\$releasever - Base
 baseurl={{ baseurl }}/\$releasever/os/\$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 #released updates
 [updates]
 name=CentOS-\$releasever - Updates
 baseurl={{ baseurl }}/\$releasever/updates/\$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 [extras]
 name=CentOS-$releasever - Extras
 baseurl={{ baseurl }}/$releasever/extras/$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 {% endif %}
 %end
