@@ -16,7 +16,7 @@ centos_installer_username: ansible
 centos_installer_password: "{{ 'changeme' | password_hash('sha512') }}"
 centos_installer_userhome: "/home/{{ centos_installer_username }}"
 centos_installer_root_password: "{{ 'changeme' | password_hash('sha512') }}"
-centos_installer_sshkey: '' # required
+centos_installer_sshkey: ''  # required
 centos_installer_interface:  # override seed file network autoconfiguration
   static: false
 centos_installer_halt: false  # true | false
