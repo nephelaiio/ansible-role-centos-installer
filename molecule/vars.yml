@@ -62,42 +62,6 @@ vms:
       part / --fstype=xfs --grow --size=1
     centos_installer_ks_template: centos7
 
-  - centos_installer_hostname: stream8-lvm-10g
-    centos_installer_ref: stream8
-    centos_installer_disk_size: "{{ 10*(1024**3) }}"
-    centos_installer_interface:
-      static: true
-      ipaddress: "{{ __bridge_net | nthhost(4) }}"
-      network: "{{ __bridge_net | ipaddr('network') }}"
-      netmask: "{{ __bridge_net | ipaddr('netmask') }}"
-      gateway: "{{ bridge_host }}"
-      nameservers:
-        - 1.1.1.1
-        - 8.8.8.8
-    centos_partitioning_method: lvm
-    centos_ks_partitioning: autopart
-    centos_installer_ks_template: stream8
-
-  - centos_installer_hostname: stream8-gpt-10g
-    centos_installer_ref: stream8
-    centos_installer_disk_size: "{{ 10*(1024**3) }}"
-    centos_installer_interface:
-      static: true
-      ipaddress: "{{ __bridge_net | nthhost(5) }}"
-      network: "{{ __bridge_net | ipaddr('network') }}"
-      netmask: "{{ __bridge_net | ipaddr('netmask') }}"
-      gateway: "{{ bridge_host }}"
-      nameservers:
-        - 1.1.1.1
-        - 8.8.8.8
-    centos_partitioning_method: regular
-    centos_ks_partitioning: |
-      clearpart --all --initlabel
-      part swap --size=4000
-      part /boot --fstype=xfs --size=500
-      part / --fstype=xfs --grow --size=1
-    centos_installer_ks_template: stream8
-
   - centos_installer_hostname: alma8-lvm-10g
     centos_installer_ref: alma8
     centos_installer_disk_size: "{{ 10*(1024**3) }}"
