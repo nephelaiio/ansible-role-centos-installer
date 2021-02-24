@@ -16,10 +16,10 @@ ssh_port_base: 2280
 centos_installers:
   centos7:
     dest: "file://{{ cache_dir }}/centos7.iso"
-    url: http://mirror.rackspace.com/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-2009.iso
+    url: http://mirror.facebook.net/centos/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-2009.iso
   stream8:
     dest: "file://{{ cache_dir }}/stream8.iso"
-    url: http://mirror.rackspace.com/CentOS/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-20210215-boot.iso
+    url: http://mirror.facebook.net/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-20210215-boot.iso
   alma8:
     dest: "file://{{ cache_dir }}/alma8.iso"
     url: https://repo.almalinux.org/almalinux/8/isos/x86_64/AlmaLinux-8.3-rc-1-x86_64-boot.iso
