@@ -29,7 +29,7 @@ provisioner:
     group_vars:
       all:
         aws_provision: yes
-        aws_project_name: nephelaiio.ubuntu_installer
+        aws_project_name: nephelaiio.centos_installer
         aws_env_name: ${MOLECULE_SCENARIO_NAME}
         aws_env_region: us-east-1
 verifier:
