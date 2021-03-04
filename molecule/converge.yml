@@ -72,7 +72,7 @@
       loop_control:
         loop_var: iso
         label: "{{ iso.key }}"
-      loop: "{{ centos_installers | dict2items }}"
+      loop: "{{ iso_installers | dict2items }}"
 
     - name: build installer isos
       include_role:
@@ -80,8 +80,8 @@
       vars:
         centos_installer_interface_name: enp0s3
         centos_installer_target_dir: "{{ cache_dir }}"
-        centos_installer_image_url: "{{ centos_installers[vm.centos_installer_ref].dest }}"
-        centos_installer_hostname: "{{ vm.centos_installer_hostname }}"
+        centos_installer_image_url: "{{ iso_installers[guest.installer_ref].dest }}"
+        centos_installer_hostname: "{{ guest.installer_hostname }}"
         centos_installer_username: molecule
         centos_installer_password: "{{ 'molecule' | password_hash('sha512') }}"
         centos_installer_root_password: "{{ 'molecule' | password_hash('sha512') }}"
@@ -90,88 +90,81 @@
           - "{{ lookup('file', kvm_key_pair_path + '.pub') }}"
           - "{{ debug_pubkey }}"
         centos_installer_halt: false
-        centos_installer_interface: "{{ vm.centos_installer_interface }}"
-        centos_installer_ks_partitioning: "{{ vm.centos_ks_partitioning }}"
-        centos_installer_ks_template: "{{ vm.centos_installer_ks_template }}"
+        centos_installer_interface: "{{ guest.installer_interface }}"
+        centos_installer_ks_partitioning: "{{ guest.installer_ks_partitioning }}"
+        centos_installer_ks_template: "{{ guest.installer_ks_template }}"
       loop_control:
-        loop_var: vm
-        label: "{{ vm.centos_installer_hostname }}"
-      loop: "{{ vms }}"
+        loop_var: guest
+        label: "{{ guest.installer_hostname }}"
+      loop: "{{ guests }}"
 
     - name: destroy kvm guest
       virt:
         command: destroy
-        name: "{{ vm.centos_installer_hostname }}"
+        name: "{{ guest.installer_hostname }}"
       loop_control:
-        loop_var: vm
-        label: "{{ vm.centos_installer_hostname }}"
-      loop: "{{ vms }}"
+        loop_var: guest
+        label: "{{ guest.installer_hostname }}"
+      loop: "{{ guests }}"
       failed_when: false
 
     - name: undefine kvm guest
       virt:
         command: undefine
-        name: "{{ vm.centos_installer_hostname }}"
+        name: "{{ guest.installer_hostname }}"
       loop_control:
-        loop_var: vm
-        label: "{{ vm.centos_installer_hostname }}"
-      loop: "{{ vms }}"
+        loop_var: guest
+        label: "{{ guest.installer_hostname }}"
+      loop: "{{ guests }}"
       failed_when: false
 
     - name: destroy kvm guest disks
       file:
-        path: "{{ vm_disk }}"
+        path: "{{ guest_disk }}"
         state: absent
       vars:
-        vm_disk: "{{ cache_dir }}/{{ vm.centos_installer_hostname }}.img"
+        guest_disk: "{{ cache_dir }}/{{ guest.installer_hostname }}.img"
       loop_control:
-        loop_var: vm
-        label: "{{ vm.centos_installer_hostname }}"
-      loop: "{{ vms }}"
+        loop_var: guest
+        label: "{{ guest.installer_hostname }}"
+      loop: "{{ guests }}"
 
     - name: create kvm guest disks
-      command: "qemu-img create {{ vm_disk }} {{ vm_disk_size }}"
+      command: "qemu-img create {{ guest_disk }} {{ guest_disk_size }}"
       args:
-        creates: "{{ vm_disk }}"
+        creates: "{{ guest_disk }}"
       vars:
-        vm_disk: "{{ cache_dir }}/{{ vm.centos_installer_hostname }}.img"
-        vm_disk_size: "{{ vm.centos_installer_disk_size }}"
+        guest_disk: "{{ cache_dir }}/{{ guest.installer_hostname }}.img"
+        guest_disk_size: "{{ guest.installer_disk_size }}"
       loop_control:
-        loop_var: vm
-        label: "{{ vm.centos_installer_hostname }}"
-      loop: "{{ vms }}"
+        loop_var: guest
+        label: "{{ guest.installer_hostname }}"
+      loop: "{{ guests }}"
 
     - name: create kvm guest
       virt:
-        command: define
         xml: "{{ xml_template }}"
+        command: define
       vars:
-        vm_hostname: "{{ vm.centos_installer_hostname }}"
-        vm_bridge: "{{ bridge_name }}"
-        vm_iso: "{{ cache_dir }}/{{ vm_hostname }}.iso"
-        vm_disk_path: "{{ cache_dir }}/{{ vm.centos_installer_hostname }}.img"
-        vm_mac: "{{ '52:54:00' | random_mac(seed=vm_hostname)}}"
-        vm_disk_format: raw
+        guest_hostname: "{{ guest.installer_hostname }}"
+        guest_bridge: "{{ bridge_name }}"
+        guest_iso: "{{ cache_dir }}/{{ guest_hostname }}.iso"
+        guest_disk_path: "{{ cache_dir }}/{{ guest.installer_hostname }}.img"
+        guest_mac: "{{ '52:54:00' | random_mac(seed=guest_hostname)}}"
+        guest_disk_format: raw
         xml_template: "{{ lookup('template', 'vm.xml.j2') }}"
       loop_control:
-        loop_var: vm
-        label: "{{ vm.centos_installer_hostname }}"
-      loop: "{{ vms }}"
+        loop_var: guest
+        label: "{{ guest.installer_hostname }}"
+      loop: "{{ guests }}"
 
     - name: start kvm guest
       virt:
-        name: "{{ vm_hostname }}"
-        xml: "{{ xml_template }}"
+        name: "{{ guest_hostname }}"
         state: running
       vars:
-        vm_hostname: "{{ vm.centos_installer_hostname }}"
-        vm_bridge: "{{ bridge_name }}"
-        vm_iso: "{{ cache_dir }}/{{ vm_hostname }}.iso"
-        vm_disk_path: "{{ vm.centos_installer_hostname }}.img"
-        vm_mac: "{{ '52:54:00' | random_mac(seed=vm_hostname)}}"
-        vm_disk_format: raw
-        xml_template: "{{ lookup('template', 'vm.xml.j2') }}"
+        guest_hostname: "{{ guest.installer_hostname }}"
       loop_control:
-        loop_var: vm
-        label: "{{ vm.centos_installer_hostname }}"
-      loop: "{{ vms }}"
+        loop_var: guest
+        label: "{{ guest.installer_hostname }}"
+      loop: "{{ guests }}"

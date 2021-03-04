@@ -1,29 +1,35 @@
 ---
+cache_dir: /tmp/molecule
+
 bridge_net: '192.168.255.0/24'
 __bridge_net: "{{ bridge_net | ipv4('network/prefix') }}"
 bridge_host: "{{ __bridge_net | nthhost(1) }}"
 bridge_prefix: "{{ __bridge_net | ipaddr('prefix') }}"
 bridge_name: dummybr0
 iface_name: dummy0
-cache_dir: /tmp/molecule
-debug_pubkey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDET8Lo7rJRsoGLe3sLdQzq86elOm03XBuvwRS3QeNU9E2mVRkDoccIIlC5+O2wBtfo48aCZBJJF8BuM33O+a31SM9YIzfOMu+HsInYZyysC72zCOIMTJ+zy1cBs3aS+oE7KnCX7mty1v4BzE0Ob49jZ+KhaJh2Fsnp7DXtWf9ozj7IQ/Fq8VZJdvT5CVo+yvRJqkgxEnB0++Q8OmV7fvO4ed9pTuRtNz7nLHOz2+/RY7ffx+GX9iUOt7YbGmCeJOgrBG9nHVU0G1m6sK3QwLAmMK3y0bVv89PMIUWDuVLhttVgt1xv+IOTliSx1ugZT52tSLUNgdfFVCMnTDs9vMpz"
-molecule_key_pair_name: molecule_key
-molecule_key_pair_path: "{{ cache_dir }}/molecule_key"
-kvm_key_pair_name: kvm_key
-kvm_key_pair_path: "{{ cache_dir }}/kvm_key"
+
+security_group_name: "{{ aws_project_name }}"
 ssh_port_base: 2280
 
-centos_installers:
+molecule_key_pair_name: "{{ aws_project_name }}"
+molecule_key_pair_path: "{{ cache_dir }}/molecule_key"
+
+kvm_key_pair_name: kvm_key
+kvm_key_pair_path: "{{ cache_dir }}/kvm_key"
+
+debug_pubkey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDET8Lo7rJRsoGLe3sLdQzq86elOm03XBuvwRS3QeNU9E2mVRkDoccIIlC5+O2wBtfo48aCZBJJF8BuM33O+a31SM9YIzfOMu+HsInYZyysC72zCOIMTJ+zy1cBs3aS+oE7KnCX7mty1v4BzE0Ob49jZ+KhaJh2Fsnp7DXtWf9ozj7IQ/Fq8VZJdvT5CVo+yvRJqkgxEnB0++Q8OmV7fvO4ed9pTuRtNz7nLHOz2+/RY7ffx+GX9iUOt7YbGmCeJOgrBG9nHVU0G1m6sK3QwLAmMK3y0bVv89PMIUWDuVLhttVgt1xv+IOTliSx1ugZT52tSLUNgdfFVCMnTDs9vMpz"
+
+iso_installers:
   centos7:
     dest: "file://{{ cache_dir }}/centos7.iso"
     url: http://mirror.facebook.net/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-2009.iso
 
-vms:
+guests:
 
-  - centos_installer_hostname: centos7-lvm-50g
-    centos_installer_ref: centos7
-    centos_installer_disk_size: "{{ 10*(1024**3) }}"
-    centos_installer_interface:
+  - installer_hostname: centos7-lvm-10g
+    installer_ref: centos7
+    installer_disk_size: "{{ 10*(1024**3) }}"
+    installer_interface:
       static: true
       ipaddress: "{{ __bridge_net | nthhost(2) }}"
       network: "{{ __bridge_net | ipaddr('network') }}"
@@ -32,14 +38,14 @@ vms:
       nameservers:
         - 1.1.1.1
         - 8.8.8.8
-    centos_partitioning_method: lvm
-    centos_ks_partitioning: autopart
-    centos_installer_ks_template: centos7
+    installer_partitioning_method: lvm
+    installer_ks_partitioning: autopart
+    installer_ks_template: centos7
 
-  - centos_installer_hostname: centos7-gpt-50g
-    centos_installer_ref: centos7
-    centos_installer_disk_size: "{{ 10*(1024**3) }}"
-    centos_installer_interface:
+  - installer_hostname: centos7-gpt-10g
+    installer_ref: centos7
+    installer_disk_size: "{{ 10*(1024**3) }}"
+    installer_interface:
       static: true
       ipaddress: "{{ __bridge_net | nthhost(3) }}"
       network: "{{ __bridge_net | ipaddr('network') }}"
@@ -48,10 +54,10 @@ vms:
       nameservers:
         - 1.1.1.1
         - 8.8.8.8
-    centos_partitioning_method: regular
-    centos_ks_partitioning: |
+    installer_partitioning_method: regular
+    installer_ks_partitioning: |
       clearpart --all --initlabel
       part swap --size=4000
       part /boot --fstype=xfs --size=500
       part / --fstype=xfs --grow --size=1
-    centos_installer_ks_template: centos7
+    installer_ks_template: centos7
