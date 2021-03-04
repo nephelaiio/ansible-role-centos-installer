@@ -32,6 +32,9 @@
               "tag:ansible_project": "{{ aws_project_name }}"
               "instance-state-name": [ "pending", "running" ]
           register: ec2_instance_query
+          until: (ec2_instance_query.instances | length) == (molecule_yml.platforms | length)
+          retries: 30
+          delay: 10
 
         - name: initialize instance metadata
           set_fact:
@@ -41,11 +44,8 @@
           set_fact:
             ec2_instance_facts: "{{ ec2_instance_facts | combine({ item.tags.Name: item}) }}"
           loop_control:
-            label: "{{ item.instance_id }}"
+            label: "{{ item.tags.Name }} - {{ item.instance_id }}"
           loop: "{{ ec2_instance_query.instances }}"
-          when:
-            - item.tags is defined
-            - item.tags.Name is defined
 
         - name: add hosts to inventory
           add_host:
