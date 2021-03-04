@@ -1,7 +1,10 @@
 ---
-- name: Verify iso creation
+- import_playbook: inventory.yml
 
-  hosts: all
+
+- name: verify iso creation
+
+  hosts: molecule
 
   gather_facts: false
 
@@ -31,9 +34,9 @@
       when: not (vm_iso.stat.exists | bool)
 
 
-- name: Add vms to inventory
+- name: add guests to inventory
 
-  hosts: all
+  hosts: molecule
 
   become: yes
 
@@ -42,49 +45,52 @@
 
   tasks:
 
-    - block:
+    - name: add debug ssh key
+      authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ debug_pubkey }}"
 
-        - name: add debug ssh key
-          authorized_key:
-            user: "{{ ansible_user }}"
-            state: present
-            key: "{{ debug_pubkey }}"
-
-        - name: add vm to inventory
-          add_host:
-            name: "{{ vm_hostname }}"
-            groups:
-              - install
-            ansible_user: molecule
-            ansible_host: "{{ vm_address }}"
-            ansible_port: "{{ (ssh_port_base | int) + (port_offset | int) }}"
-            ansible_ssh_private_key_file: "{{ kvm_key_pair_path }}"
-            partition_method: "{{ vm.centos_partitioning_method }}"
-            disk_size: "{{ vm.centos_installer_disk_size }}"
-          vars:
-            vm_hostname: "{{ vm.centos_installer_hostname }}"
-            local_address: "{{ ansible_default_ipv4.address }}"
-            vm_address: "{{ (test_local | default('no') | bool) | ternary(local_address, ansible_host) }}"
-          loop_control:
-            loop_var: vm
-            index_var: port_offset
-            label: "{{ vm.centos_installer_hostname }}"
-          loop: "{{ vms }}"
-
-      when: kvm_enabled | bool
+    - name: add guest to inventory
+      add_host:
+        name: "{{ guest_hostname }}"
+        groups:
+          - install
+        ansible_user: molecule
+        ansible_host: "{{ guest_address }}"
+        ansible_port: "{{ guest_port }}"
+        ansible_ssh_private_key_file: "{{ kvm_key_pair_path }}"
+        partition_method: "{{ guest.centos_partitioning_method }}"
+        disk_size: "{{ guest.centos_installer_disk_size }}"
+      vars:
+        guest_hostname: "{{ guest.centos_installer_hostname }}"
+        bridge_address: "{{ guest.centos_installer_interface.ipaddress }}"
+        snat_address: "{{ ansible_host }}"
+        guest_address: "{{ (aws_provision | default('no') | bool) | ternary(snat_address, bridge_address) }}"
+        bridge_port: 22
+        snat_port: "{{ (ssh_port_base | int) + (port_offset | int) }}"
+        guest_port: "{{ (aws_provision | default('no') | bool) | ternary(snat_port, bridge_port) }}"
+      loop_control:
+        loop_var: guest
+        index_var: port_offset
+        label: "{{ guest.centos_installer_hostname }}"
+      loop: "{{ vms }}"
 
 
-- name: Test vms
+- name: verify guests
 
   hosts: install
 
   gather_facts: no
 
+  vars_files:
+    - ./vars.yml
+
   tasks:
 
     - name: debug connection parameters
       debug:
-        msg: "{{ ansible_user }}@{{ ansible_host }} {{ ansible_ssh_common_args | default('') }} -i {{ ansible_ssh_private_key_file }}"
+        msg: "ssh {{ ansible_user }}@{{ ansible_host }} {{ ansible_ssh_common_args | default('') }} -i {{ ansible_ssh_private_key_file }} -p {{ ansible_port }}"
 
     - name: test connection
       wait_for_connection:

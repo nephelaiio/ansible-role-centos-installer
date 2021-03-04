@@ -8,7 +8,7 @@ driver:
     ansible_connection_options:
       ansible_connection: local
 platforms:
-  - name: instance
+  - name: installer
 provisioner:
   name: ansible
   log: true
@@ -21,11 +21,6 @@ provisioner:
     verify: ../verify.yml
     prepare: ../prepare.yml
     cleanup: ../cleanup.yml
-  inventory:
-    group_vars:
-      all:
-        kvm_enabled: true
-        test_local: yes
 verifier:
   name: ansible
 scenario:
