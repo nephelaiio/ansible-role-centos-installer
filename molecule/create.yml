@@ -226,7 +226,7 @@
               "tag:ansible_environment": "{{ aws_env_name }}"
               "tag:ansible_project": "{{ aws_project_name }}"
               "instance-state-name": [ "pending", "running" ]
-          register: es2_instance_query
+          register: ec2_instance_query
           until: (ec2_instance_query.instances) | length > 0
           retries: 30
           delay: 10
