@@ -214,3 +214,15 @@
           ansible_user: "{{ ansible_user }}"
       delegate_to: localhost
       when: create | bool
+
+    - name: wait for instance startup
+      ec2_instance_info:
+        region: "{{ aws_env_region }}"
+        filters:
+          "tag:ansible_environment": "{{ aws_env_name }}"
+          "tag:ansible_project": "{{ aws_project_name }}"
+          "instance-state-name": [ "running" ]
+      register: ec2_instance_query
+      until: (ec2_instance_query.instances | length) == (molecule_yml.platforms | length)
+      retries: 30
+      delay: 10

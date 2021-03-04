@@ -32,9 +32,6 @@
               "tag:ansible_project": "{{ aws_project_name }}"
               "instance-state-name": [ "pending", "running" ]
           register: ec2_instance_query
-          until: (ec2_instance_query.instances | length) == (molecule_yml.platforms | length)
-          retries: 30
-          delay: 10
 
         - name: initialize instance metadata
           set_fact:
