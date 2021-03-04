@@ -207,7 +207,7 @@
         security_groups: "{{ security_group }}"
         image_id: "{{ image }}"
         wait: yes
-        wait_timeout: 600
+        wait_timeout: 1200
         vpc_subnet_id: "{{ subnet_id }}"
         network:
           assign_public_ip: yes
