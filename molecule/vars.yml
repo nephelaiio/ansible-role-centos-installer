@@ -56,7 +56,7 @@ guests:
         - 8.8.8.8
     installer_partitioning_method: regular
     installer_ks_partitioning: |
-      clearpart --all --initlabel
+      _clearpart --all --initlabel
       part swap --size=4000
       part /boot --fstype=xfs --size=500
       part / --fstype=xfs --grow --size=1

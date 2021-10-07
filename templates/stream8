@@ -1,26 +1,26 @@
 url --url=http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/
 text
 lang en_US.UTF-8
-keyboard {{ keyboard }}
-{% if interface.static %}
-network  --onboot yes --bootproto=static --ip={{ interface.ipaddress }} --netmask={{ interface.netmask }} --gateway={{ interface.gateway }} --nameserver={{ interface.nameservers | join(',')}} --noipv6 --hostname {{ hostname }}
+keyboard {{ _keyboard }}
+{% if _interface.static %}
+network  --onboot yes --bootproto=static --ip={{ _interface.ipaddress }} --netmask={{ _interface.netmask }} --gateway={{ _interface.gateway }} --nameserver={{ _interface.nameservers | join(',')}} --noipv6 --hostname {{ _hostname }}
 {% else %}
-network  --onboot yes --bootproto=dhcp --hostname {{ hostname }}
+network  --onboot yes --bootproto=dhcp --hostname {{ _hostname }}
 {% endif %}
-rootpw --iscrypted {{ root_password }}
+rootpw --iscrypted {{ _root_password }}
 firewall --disabled
 authselect select minimal
 selinux --disabled
-timezone {{ timezone }}
-bootloader --location=mbr --driveorder={{ disk }}
+timezone {{ _timezone }}
+bootloader --location=mbr --driveorder={{ _disk }}
 
 zerombr
-{{ clearpart }}
-{{ partitioning }}
+{{ _clearpart }}
+{{ _partitioning }}
 
-user --name={{ username }} --homedir={{ homedir }} --password={{ password }} --iscrypted
+user --name={{ _username }} --homedir={{ _homedir }} --password={{ _password }} --iscrypted
 
-{% if halt %}
+{% if _halt %}
 poweroff
 {% else %}
 reboot --eject
@@ -31,38 +31,38 @@ reboot --eject
 %end
 
 %post
-mkdir {{ homedir }}/.ssh
-{% for key in sshkey %}
-    echo '{{ key }}' >> {{ homedir }}/.ssh/authorized_keys
+mkdir {{ _homedir }}/.ssh
+{% for key in _sshkey %}
+    echo '{{ key }}' >> {{ _homedir }}/.ssh/authorized_keys
 {% endfor %}
-chown -R {{ username }}:{{ username }} {{ homedir }}/.ssh
+chown -R {{ _username }}:{{ _username }} {{ _homedir }}/.ssh
 echo "blacklist ipv6" >> /etc/modprobe.d/blacklist.conf
-echo "{{ username }} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/{{ username }}
-chmod 440 /etc/sudoers.d/{{ username }}
+echo "{{ _username }} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/{{ _username }}
+chmod 440 /etc/sudoers.d/{{ _username }}
 sed -r -i -e 's/^#?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sed -r -i -e 's/^#?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 
-{{ kickstart_extra }}
+{{ _kickstart_extra }}
 
-{% if baseurl != '' %}
+{% if _baseurl != '' %}
 sudo sed -i -e 's/^enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf
 cat <<-EOF > /etc/yum.repos.d/CentOS-Base.repo
 [base]
 name=CentOS-\$releasever - Base
-baseurl={{ baseurl }}/\$releasever/os/\$basearch/
+baseurl={{ _baseurl }}/\$releasever/os/\$basearch/
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 #released updates
 [updates]
 name=CentOS-\$releasever - Updates
-baseurl={{ baseurl }}/\$releasever/updates/\$basearch/
+baseurl={{ _baseurl }}/\$releasever/updates/\$basearch/
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 [extras]
 name=CentOS-$releasever - Extras
-baseurl={{ baseurl }}/$releasever/extras/$basearch/
+baseurl={{ _baseurl }}/$releasever/extras/$basearch/
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 {% endif %}
